@@ -1,5 +1,4 @@
-const liList = document.querySelectorAll('ol li');
-const liList2 = Array.from(document.querySelectorAll('ol li')).map(li => {
+const liList = Array.from(document.querySelectorAll('ol li')).map(li => {
   const [qst, asw] = ['qst', 'asw'].map(cls => li.querySelector('.' + cls));
   const [normalizedQst, normalizedAsw] = [qst, asw].map(element => normalize(element.textContent));
   return { li, qst, asw, normalizedQst, normalizedAsw };
@@ -17,7 +16,7 @@ function find(event) {
   const value = normalize(event.target.value).trim();
 
   if (value.length <= 0) {
-    liList2.forEach(({ li, qst, asw }) => {
+    liList.forEach(({ li, qst, asw }) => {
       li.style.display = 'list-item';
       rHighlight(qst, asw);
     });
@@ -25,7 +24,7 @@ function find(event) {
     return;
   }
 
-  liList2.forEach(({ li, qst, asw, normalizedQst, normalizedAsw }) => {
+  liList.forEach(({ li, qst, asw, normalizedQst, normalizedAsw }) => {
     if (normalizedQst.includes(value) || normalizedAsw.includes(value)) {
       if (li.style.display != 'list-item') li.style.display = 'list-item';
       const elementsToHighlight = [qst, asw];
