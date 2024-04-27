@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tải lên tệp HTML đáp án</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>      
+      *{box-sizing: border-box;}
+      body{font-size: 16px; font-family: Arial, Helvetica, sans-serif; background-color: #222; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; padding-top: 10dvh;}
+      form{display: flex; align-items: center; justify-content: center; width: 600px; flex-direction: column; line-height: 1.3;}
+      p{text-align: justify; margin-bottom: 50px;}
+      input{cursor: pointer; display: block; width: 100%; padding: 10px; border: 1px solid #fff;}
+      button{margin: 10px; padding: 10px; min-width: 200px; cursor: pointer;}
+      .loader-modal {z-index: 10; position: fixed; top: 0; right: 0; background-color: rgba(0, 0, 0, .7); display: flex; align-items: center; justify-content: center; width: 100%; height: 100vh;}
+      .loader {--size: 120px; width: var(--size); aspect-ratio: 1/1; background-image: conic-gradient(transparent 20%, #FFFFFF); mask: radial-gradient(circle calc(var(--size) / 2.5), transparent 100%, #000000);border-radius: 50%;animation: spin 1s linear infinite;}
+      @keyframes spin {
+        100% {transform: rotate(360deg);}
+      }
+      
+      @media screen and (max-width: 730px){
+        body{padding: 2px 4px 2px 0px; width: auto; font-size: 14px;}
+        form{width: 100%;}
+      }
+    </style>
+</head>
+<body>
+    <form id="uploadForm" enctype="multipart/form-data">
+      <h2>Tải lên tệp HTML đáp án</h2>
+      <p>Sau khi nộp bài, nếu bạn chưa tắt trang, hãy tìm trang xem `toàn bộ` đáp án, ctrl+S trang đó dưới dạng html và tải lên.</p>
+        <input type="file" name="htmlFile" accept=".html">
+        <button type="submit">Tải lên</button>
+    </form>
+    <div style="display: none;" class="loader-modal">
+        <div class="loader"></div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', event => {
+            event.preventDefault();
+
+            const loader = document.querySelector('.loader-modal');
+            let formData = new FormData();
+          
+            formData.append('htmlFile', document.querySelector('input[type="file"]').files[0]);
+            loader.style.display = 'flex';
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if(response.ok) {
+                    return response.text();
+                } else {
+                    throw new Error('Có lỗi xảy ra khi tải lên tệp.');
+                }
+            }).then(data => {
+                alert(data);
+                loader.style.display = 'none';
+                window.location.href = '../'
+            }).catch(error => {
+                loader.style.display = 'none';
+                alert(error);
+            });
+        });
+    </script>
+</body>
+</html>

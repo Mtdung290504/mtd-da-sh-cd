@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>ĐA-SHCD</title>
+    <style>
+      *{box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: rgba(0, 0, 0, .6)}
+      ::-webkit-scrollbar{width: 5px; background-color: lightgray;}
+      ::-webkit-scrollbar-thumb{background: #000;}
+      body{font-size: 16px; padding: 0px; margin: 0; font-family: Arial, Helvetica, sans-serif; background-color: #333; display: flex; flex-direction: column;}
+      header{width: auto; position: sticky; top: 0; background-color: #111; display: flex; padding: 10px 20px; flex-direction: row-reverse;}
+      header :is(input[type="text"], button){padding: 10px; outline: none; border: none;}
+      .input-box{display: flex;}
+      button{cursor: pointer; margin-left: 15px; min-width: 100px;}
+      input[type="text"]{min-width: 600px;}
+      h3{color: #DDD;}
+      .qst,.asw{text-align: justify; line-height: 1.5; display: block;}
+      .qst{font-weight:600; color: #DDD; padding: 2px; margin-bottom: 4px;}
+      .qst:before{content: attr(index) ".  ";}
+      .asw{padding: 4px 2px 2px 5px; color: #9966CC;}
+      .asw:before{content: "->  ";}
+      ol{display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); row-gap: 15px; column-gap: 50px; width: auto; margin: 50px; padding: 0;}
+      ol, li{color: white;}
+      li{padding: 10px; background-color: #222; list-style-type: none;}
+      .highlight{color: white; text-decoration: underline; background-color: rgba(255, 255, 0, .7);}
+      details{padding: 10px; color: white; min-width: 200px;}
+      summary{cursor: pointer;}
+      ::selection {background-color: rgba(0, 0, 0, .6);}
+      .right{color: white; margin-right: auto; padding: 10px;}
+      .right a{color: inherit;}
+      @media screen and (max-width: 730px){
+        ::-webkit-scrollbar{display: none;}
+        body{padding: 2px 4px 2px 0px; width: auto; font-size: 14px;}
+        header {padding: 5px; flex-direction: column;}
+        input[type="text"]{min-width: 0px; flex: 1;}
+        button {margin-left: 5px; min-width: 0;}
+        details{padding: 5px; margin-top: 5px;}
+        ol{grid-template-columns: repeat(1, minmax(0, 1fr)); margin: 0; padding-top: 20px;}
+        li::marker{font-size: 12px;}
+        .right{display: none;}
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <div class="input-box">
+        <input type="text" placeholder="Tìm (Có thể nhập không dấu)...">
+        <button>Reset</button>        
+      </div>
+      <div class="right">Nộp bài xong đừng tắt trang nộp bài vội, giúp mình bổ sung thêm câu hỏi vào ngân hàng <a href="/s">Tại đây</a></div>
+    </header>
+    
+    <ol>
+      <% questions.sort((a, b) => a.question.localeCompare(b.question)).forEach(({question, answer}, index) => { %>
+        <li data-quest-index = "<%= index + 1 %>">
+          <span class="qst" index="<%= index + 1 %>"><%= question %></span>
+          <span class="asw"><%= answer %></span>
+        </li>
+      <% }); %>
+    </ol>
+            
+    <script>
+        const liList = document.querySelectorAll('ol li');
+        const liList2 = Array.from(document.querySelectorAll('ol li')).map(li => ({
+          li,
+          qst: li.querySelector('.qst'),
+          asw: li.querySelector('.asw')
+        }));
+        const input = document.querySelector('input');
+      
+        input.addEventListener('input', debounce(find, 200));
+      
+        document.querySelector('button').addEventListener('click', () => {
+            input.value = '';
+            input.dispatchEvent(new Event('input'));
+        });
+      
+        function find(event) {
+          const value = normalize(event.target.value).trim();
+          
+          if(value.length <= 0) {
+            liList.forEach(li => {
+              const [qstBox, aswBox] = ['qst', 'asw'].map(cls => li.querySelector('.' + cls));
+              li.style.display = 'list-item';
+              rHighlight(qstBox, aswBox);
+            });
+            
+            return;
+          }
+          
+          liList.forEach(li => {
+            const qstBox = li.querySelector('.qst'),
+                  aswBox = li.querySelector('.asw');
+            const normalizedQst = normalize(qstBox.textContent),
+                  normalizedAsw = normalize(aswBox.textContent);
+
+            if (normalizedQst.includes(value) || normalizedAsw.includes(value)) {
+              if(li.style.display != 'list-item') li.style.display = 'list-item';
+              if(normalizedQst.includes(value)) {
+                const qstStart = normalizedQst.indexOf(value),
+                      qstEnd = qstStart + value.length;
+                const replaceValue = qstBox.textContent.slice(qstStart, qstEnd);
+                qstBox.innerHTML = qstBox.innerHTML.replaceAll('<span class="highlight">', '')
+                  .replaceAll('</span>', '').replaceAll(replaceValue, `<span class="highlight">${replaceValue}</span>`);                
+              } else {
+                qstBox.innerHTML = qstBox.innerHTML.replaceAll('<span class="highlight">', '').replaceAll('</span>', '');
+              }
+              if(normalizedAsw.includes(value)) {
+                const aswStart = normalizedAsw.indexOf(value),
+                      aswEnd = aswStart + value.length;
+                const replaceValue = aswBox.textContent.slice(aswStart, aswEnd);
+                aswBox.innerHTML = aswBox.innerHTML.replaceAll('<span class="highlight">', '')
+                  .replaceAll('</span>', '').replaceAll(replaceValue, `<span class="highlight">${replaceValue}</span>`);
+              } else {
+                aswBox.innerHTML = aswBox.innerHTML.replaceAll('<span class="highlight">', '').replaceAll('</span>', '');
+              }
+            } else {
+              if(li.style.display != 'none') li.style.display = 'none';
+              rHighlight(qstBox, aswBox);
+            }
+          });
+        }
+      
+        function debounce(func, delay) {
+          let timeoutId;
+
+          return function() {
+            const context = this,
+                  args = arguments;
+
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+              func.apply(context, args);
+            }, delay);
+          };
+        }
+      
+        function normalize(text) {
+          return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        }
+      
+        // function highlight(ele, textToHighlight) {
+        //   return 
+        // }
+
+        function rHighlight(...elements) {
+          elements.forEach(ele => {
+            ele.innerHTML = ele.innerHTML
+              .replaceAll('<span class="highlight">', '')
+              .replaceAll('</span>', '');
+          });
+        }
+    </script>
+  </body>
+</html>
